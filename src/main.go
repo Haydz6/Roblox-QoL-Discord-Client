@@ -38,7 +38,12 @@ func (s *Server) handleWS(ws *websocket.Conn) {
 
 func (s *Server) cleanWS(ws *websocket.Conn) {
 	delete(s.conns, ws)
-	client.SetActivity(client.Activity{State: "end"})
+
+	time.Sleep(time.Second * 5)
+
+	if len(s.conns) == 0 {
+		client.SetActivity(client.Activity{State: "end"})
+	}
 }
 
 func (s *Server) readLoop(ws *websocket.Conn) {
