@@ -7,13 +7,16 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Haydz6/Roblox-QoL-Discord-Client/src/presence"
+	"github.com/Haydz6/Roblox-QoL-Discord-Client/src/rhttp"
 	"github.com/Haydz6/Roblox-QoL-Discord-Client/src/system"
 	"github.com/Haydz6/rich-go/client"
 	"golang.org/x/net/websocket"
 )
 
 type PresenceUpdate struct {
-	Activity *client.Activity
+	Activity       *client.Activity
+	Authentication string
 }
 
 type Server struct {
@@ -39,10 +42,15 @@ func (s *Server) handleWS(ws *websocket.Conn) {
 func (s *Server) cleanWS(ws *websocket.Conn) {
 	delete(s.conns, ws)
 
-	time.Sleep(time.Second * 5)
+	println("Setting?")
+	if !presence.SetDependentPresence(true) {
+		println("No cookie!")
+		time.Sleep(time.Second * 5)
 
-	if len(s.conns) == 0 {
-		client.SetActivity(client.Activity{State: "end"})
+		println(len(s.conns))
+		if len(s.conns) == 0 {
+			client.SetActivity(client.Activity{State: "end"})
+		}
 	}
 }
 
@@ -56,9 +64,11 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 			if err != nil {
 				Cleared = true
 				s.cleanWS(ws)
+				break
 			}
 		}
 	}()
+	presence.SetDependentPresence(false)
 
 	for !Cleared {
 		n, err := ws.Read(buf)
@@ -78,6 +88,11 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 			continue
 		}
 
+		if Body.Authentication != "" {
+			rhttp.SetCookie(Body.Authentication)
+			continue
+		}
+
 		var Error error
 		if Body.Activity != nil {
 			Error = client.SetActivity(*Body.Activity)
@@ -94,14 +109,19 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 func main() {
 	go system.UpdateAutoStartState(true)
 	go system.CreateTray()
+	presence.SetDependentPresence(true)
 	server := NewServer()
+
+	println("opening server")
 
 	http.HandleFunc("/presence", func(w http.ResponseWriter, req *http.Request) {
 		s := websocket.Server{Handler: websocket.Handler(server.handleWS)}
 		s.ServeHTTP(w, req)
 	})
 
+	println("client login")
 	client.Login("1105722413905346660")
+	println("client logged in")
 
 	for i := 0; i <= 4; i++ {
 		err := http.ListenAndServe(":"+strconv.Itoa(9300+i), nil)
