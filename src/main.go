@@ -5,7 +5,9 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/Haydz6/Roblox-QoL-Discord-Client/src/system"
 	"github.com/Haydz6/rich-go/client"
 	"golang.org/x/net/websocket"
 )
@@ -34,10 +36,26 @@ func (s *Server) handleWS(ws *websocket.Conn) {
 	s.readLoop(ws)
 }
 
+func (s *Server) cleanWS(ws *websocket.Conn) {
+	delete(s.conns, ws)
+	client.SetActivity(client.Activity{State: "end"})
+}
+
 func (s *Server) readLoop(ws *websocket.Conn) {
 	buf := make([]byte, 1024)
 
-	for {
+	Cleared := false
+	go func() {
+		for range time.Tick(time.Second * 1) {
+			_, err := ws.Write([]byte("ping"))
+			if err != nil {
+				Cleared = true
+				s.cleanWS(ws)
+			}
+		}
+	}()
+
+	for !Cleared {
 		n, err := ws.Read(buf)
 		if err == io.EOF {
 			break
@@ -69,6 +87,8 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 }
 
 func main() {
+	go system.UpdateAutoStartState(true)
+	go system.CreateTray()
 	server := NewServer()
 
 	http.HandleFunc("/presence", func(w http.ResponseWriter, req *http.Request) {
