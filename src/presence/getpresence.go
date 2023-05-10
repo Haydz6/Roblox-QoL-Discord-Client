@@ -26,13 +26,11 @@ func GetPresence(UserId int) (bool, bool, int, int, string) {
 		return false, false, 0, 0, ""
 	}
 
-	println(string(RequestBytes))
 	Success, Result := rhttp.RobloxRequest("https://presence.roblox.com/v1/presence/users", "POST", nil, string(RequestBytes), true)
 	if Result != nil {
 		defer Result.Body.Close()
 	}
 
-	println(Success)
 	if !Success {
 		return false, false, 0, 0, ""
 	}
@@ -41,7 +39,6 @@ func GetPresence(UserId int) (bool, bool, int, int, string) {
 	JSONErr := json.NewDecoder(Result.Body).Decode(&Body)
 
 	if JSONErr != nil {
-		println(JSONErr.Error())
 		return false, false, 0, 0, ""
 	}
 

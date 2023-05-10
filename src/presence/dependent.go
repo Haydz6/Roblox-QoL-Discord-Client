@@ -11,13 +11,15 @@ import (
 var DependentPresenceEnabled = false
 var DependentPresenceTick = 0
 
+var LastTimestamp time.Time
+var LastPlaceId int
+var LastJobId string
+
 func RunExternalPresence() {
-	var LastPlaceId int
 	var CachedDependentPresenceTick = DependentPresenceTick
 
 	for range time.Tick(time.Second * 10) {
 		if CachedDependentPresenceTick != DependentPresenceTick {
-			println("tick difference")
 			break
 		}
 
@@ -39,7 +41,7 @@ func RunExternalPresence() {
 			continue
 		}
 
-		if PlaceId == LastPlaceId {
+		if PlaceId == LastPlaceId && JobId == LastJobId {
 			continue
 		}
 
@@ -57,8 +59,9 @@ func RunExternalPresence() {
 			}
 
 			LastPlaceId = PlaceId
+			LastJobId = JobId
 
-			GameElapsed := time.Now()
+			LastTimestamp = time.Now()
 			client.SetActivity(client.Activity{
 				Details:    PlaceInfo.Name,
 				Buttons:    []*client.Button{{Label: "Join", Url: fmt.Sprintf("roblox://experiences/start?placeId=%d&gameInstanceId=%s", PlaceId, JobId)}, {Label: "View Game", Url: fmt.Sprintf("https://www.roblox.com/games/%d", PlaceId)}},
@@ -67,10 +70,11 @@ func RunExternalPresence() {
 				LargeImage: ThumbnailURL,
 				SmallText:  "Roblox",
 				SmallImage: "https://cdn.discordapp.com/app-assets/1105722413905346660/1105722508038115438.png",
-				Timestamps: &client.Timestamps{Start: &GameElapsed},
+				Timestamps: &client.Timestamps{Start: &LastTimestamp},
 			})
 		} else {
 			LastPlaceId = 0
+			LastJobId = ""
 			client.SetActivity(client.Activity{State: "end"})
 		}
 	}
@@ -81,8 +85,11 @@ func SetDependentPresence(Enabled bool) bool {
 		return DependentPresenceEnabled
 	}
 
+	println("new dependent state", Enabled)
 	HasCookie := rhttp.GetCookie() != ""
 	DependentPresenceTick++
+	DependentPresenceEnabled = Enabled
+
 	if Enabled && HasCookie {
 		println("in external mode")
 		go RunExternalPresence()

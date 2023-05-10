@@ -16,7 +16,16 @@ import (
 
 type PresenceUpdate struct {
 	Activity       *client.Activity
+	PlaceId        int
+	JobId          string
 	Authentication string
+}
+
+type MessageToBrowserStruct struct {
+	Type      string `json:",omitempty"`
+	Timestamp int64  `json:",omitempty"`
+	PlaceId   int    `json:",omitempty"`
+	JobId     string `json:",omitempty"`
 }
 
 type Server struct {
@@ -60,7 +69,7 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 	Cleared := false
 	go func() {
 		for range time.Tick(time.Second * 1) {
-			_, err := ws.Write([]byte("ping"))
+			_, err := ws.Write([]byte(""))
 			if err != nil {
 				Cleared = true
 				s.cleanWS(ws)
@@ -68,7 +77,15 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 			}
 		}
 	}()
+
 	presence.SetDependentPresence(false)
+	println(presence.LastPlaceId)
+	if presence.LastPlaceId != 0 {
+		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Timestamp", Timestamp: presence.LastTimestamp.UnixMilli(), PlaceId: presence.LastPlaceId, JobId: presence.LastJobId})
+		if err == nil {
+			ws.Write(bytes)
+		}
+	}
 
 	for !Cleared {
 		n, err := ws.Read(buf)
@@ -95,6 +112,9 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 
 		var Error error
 		if Body.Activity != nil {
+			presence.LastJobId = Body.JobId
+			presence.LastPlaceId = Body.PlaceId
+			presence.LastTimestamp = *Body.Activity.Timestamps.Start
 			Error = client.SetActivity(*Body.Activity)
 		} else {
 			Error = client.SetActivity(client.Activity{State: "end"})
