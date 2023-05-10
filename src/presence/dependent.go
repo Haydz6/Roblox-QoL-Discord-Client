@@ -13,6 +13,7 @@ var DependentPresenceTick = 0
 
 var LastTimestamp time.Time
 var LastPlaceId int
+var LastUniverseId int
 var LastJobId string
 
 func RunExternalPresence() {
@@ -58,10 +59,14 @@ func RunExternalPresence() {
 				Verified = " ☑️"
 			}
 
+			if LastUniverseId != UniverseId {
+				LastTimestamp = time.Now()
+			}
+
 			LastPlaceId = PlaceId
 			LastJobId = JobId
+			LastUniverseId = UniverseId
 
-			LastTimestamp = time.Now()
 			client.SetActivity(client.Activity{
 				Details:    PlaceInfo.Name,
 				Buttons:    []*client.Button{{Label: "Join", Url: fmt.Sprintf("roblox://experiences/start?placeId=%d&gameInstanceId=%s", PlaceId, JobId)}, {Label: "View Game", Url: fmt.Sprintf("https://www.roblox.com/games/%d", PlaceId)}},
@@ -74,6 +79,7 @@ func RunExternalPresence() {
 			})
 		} else {
 			LastPlaceId = 0
+			LastUniverseId = 0
 			LastJobId = ""
 			client.SetActivity(client.Activity{State: "end"})
 		}

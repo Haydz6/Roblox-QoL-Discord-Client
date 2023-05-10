@@ -22,10 +22,11 @@ type PresenceUpdate struct {
 }
 
 type MessageToBrowserStruct struct {
-	Type      string `json:",omitempty"`
-	Timestamp int64  `json:",omitempty"`
-	PlaceId   int    `json:",omitempty"`
-	JobId     string `json:",omitempty"`
+	Type       string `json:",omitempty"`
+	Timestamp  int64  `json:",omitempty"`
+	PlaceId    int    `json:",omitempty"`
+	UniverseId int    `json:",omitempty"`
+	JobId      string `json:",omitempty"`
 }
 
 type Server struct {
@@ -81,7 +82,7 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 	presence.SetDependentPresence(false)
 	println(presence.LastPlaceId)
 	if presence.LastPlaceId != 0 {
-		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Timestamp", Timestamp: presence.LastTimestamp.UnixMilli(), PlaceId: presence.LastPlaceId, JobId: presence.LastJobId})
+		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Timestamp", Timestamp: presence.LastTimestamp.UnixMilli(), PlaceId: presence.LastPlaceId, JobId: presence.LastJobId, UniverseId: presence.LastUniverseId})
 		if err == nil {
 			ws.Write(bytes)
 		}
