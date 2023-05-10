@@ -10,6 +10,9 @@ var exe string
 var app *autostart.App
 
 func FetchAutoStartInfo() {
+	if exe == "" {
+		exe, _ = os.Executable()
+	}
 	if app == nil {
 		app = &autostart.App{
 			Name:        "QoLDiscordClient",
@@ -17,9 +20,6 @@ func FetchAutoStartInfo() {
 			Exec:        []string{exe},
 			Icon:        string(TrayIcon),
 		}
-	}
-	if exe == "" {
-		exe, _ = os.Executable()
 	}
 }
 
