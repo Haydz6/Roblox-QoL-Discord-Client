@@ -78,7 +78,7 @@ func main() {
 
 	client.Login("1105722413905346660")
 
-	for i := 0; i <= 10; i++ {
+	for i := 0; i <= 4; i++ {
 		err := http.ListenAndServe(":"+strconv.Itoa(9300+i), nil)
 		if err == nil {
 			break
