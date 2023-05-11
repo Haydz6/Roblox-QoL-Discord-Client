@@ -3,7 +3,7 @@ module github.com/Haydz6/Roblox-QoL-Discord-Client
 go 1.20
 
 require (
-	github.com/Haydz6/rich-go v0.0.0-20221211020756-a49c7642fb34
+	github.com/Haydz6/rich-go v0.0.0-20230511113724-5986c6aaab55
 	github.com/emersion/go-autostart v0.0.0-20210130080809-00ed301c8e9a
 	github.com/getlantern/systray v1.2.2
 	golang.org/x/net v0.7.0

@@ -91,7 +91,6 @@ func SetDependentPresence(Enabled bool) bool {
 		return DependentPresenceEnabled
 	}
 
-	println("new dependent state", Enabled)
 	HasCookie := rhttp.GetCookie() != ""
 	DependentPresenceTick++
 	DependentPresenceEnabled = Enabled

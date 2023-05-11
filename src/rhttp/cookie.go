@@ -11,6 +11,5 @@ func GetCookie() string {
 }
 
 func SetCookie(NewCookie string) {
-	println("new cookie set")
 	Cookie = NewCookie
 }

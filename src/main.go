@@ -22,11 +22,12 @@ type PresenceUpdate struct {
 }
 
 type MessageToBrowserStruct struct {
-	Type       string `json:",omitempty"`
-	Timestamp  int64  `json:",omitempty"`
-	PlaceId    int    `json:",omitempty"`
-	UniverseId int    `json:",omitempty"`
-	JobId      string `json:",omitempty"`
+	Type       string                      `json:",omitempty"`
+	Timestamp  int64                       `json:",omitempty"`
+	PlaceId    int                         `json:",omitempty"`
+	UniverseId int                         `json:",omitempty"`
+	JobId      string                      `json:",omitempty"`
+	User       *client.AuthenticatedStruct `json:",omitempty"`
 }
 
 type Server struct {
@@ -52,12 +53,9 @@ func (s *Server) handleWS(ws *websocket.Conn) {
 func (s *Server) cleanWS(ws *websocket.Conn) {
 	delete(s.conns, ws)
 
-	println("Setting?")
 	if !presence.SetDependentPresence(true) {
-		println("No cookie!")
 		time.Sleep(time.Second * 5)
 
-		println(len(s.conns))
 		if len(s.conns) == 0 {
 			client.SetActivity(client.Activity{State: "end"})
 		}
@@ -80,9 +78,16 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 	}()
 
 	presence.SetDependentPresence(false)
-	println(presence.LastPlaceId)
 	if presence.LastPlaceId != 0 {
 		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Timestamp", Timestamp: presence.LastTimestamp.UnixMilli(), PlaceId: presence.LastPlaceId, JobId: presence.LastJobId, UniverseId: presence.LastUniverseId})
+		if err == nil {
+			ws.Write(bytes)
+		}
+	}
+
+	println("is authed", client.Authentication != nil)
+	if client.Authentication != nil {
+		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Authentication", User: client.Authentication})
 		if err == nil {
 			ws.Write(bytes)
 		}
@@ -127,6 +132,21 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 	}
 }
 
+func (s *Server) SendNewAuthentication() {
+	for {
+		client.AuthenticationUpdate.Add(1)
+		client.AuthenticationUpdate.Wait()
+		println("auth update")
+
+		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Authentication", User: client.Authentication})
+		if err == nil {
+			for ws := range s.conns {
+				ws.Write(bytes)
+			}
+		}
+	}
+}
+
 func main() {
 	system.GetSettings()
 	if system.Settings.StartonStartup {
@@ -142,6 +162,8 @@ func main() {
 		s := websocket.Server{Handler: websocket.Handler(server.handleWS)}
 		s.ServeHTTP(w, req)
 	})
+
+	go server.SendNewAuthentication()
 
 	println("client login")
 	client.Login("1105722413905346660")
