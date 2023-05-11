@@ -30,6 +30,7 @@ func TrayReady() {
 			quit()
 		case <-StartupButton.ClickedCh:
 			Settings.StartonStartup = !Settings.StartonStartup
+			UpdateAutoStartState(Settings.StartonStartup)
 			if Settings.StartonStartup {
 				StartupButton.Check()
 			} else {
