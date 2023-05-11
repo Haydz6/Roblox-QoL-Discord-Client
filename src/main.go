@@ -128,7 +128,10 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 }
 
 func main() {
-	go system.UpdateAutoStartState(true)
+	system.GetSettings()
+	if system.Settings.StartonStartup {
+		go system.UpdateAutoStartState(true)
+	}
 	go system.CreateTray()
 	presence.SetDependentPresence(true)
 	server := NewServer()
