@@ -149,10 +149,12 @@ func (s *Server) SendNewAuthentication() {
 
 func main() {
 	system.GetSettings()
+	system.ShowConsole(system.Settings.ShowConsole)
 	if system.Settings.StartonStartup {
 		go system.UpdateAutoStartState(true)
 	}
 	go system.CreateTray()
+	rhttp.Cookie = system.Settings.Cookie
 	presence.SetDependentPresence(true)
 	server := NewServer()
 
