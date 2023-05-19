@@ -14,5 +14,6 @@ func GetCookie() string {
 
 func SetCookie(NewCookie string) {
 	Cookie = NewCookie
+	system.Settings.Cookie = NewCookie
 	system.SaveSettings()
 }
