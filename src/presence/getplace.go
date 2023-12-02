@@ -36,7 +36,7 @@ func GetPlaceInfo(UniverseId int) (bool, *GetUniverseStruct) {
 		return true, CachedGetPlace
 	}
 
-	Success, Result := rhttp.RobloxRequest(fmt.Sprintf("https://games.roblox.com/v1/games?universeIds=%d", UniverseId), "GET", nil, "", true)
+	Success, Result := rhttp.RobloxRequest(fmt.Sprintf("https://games.roblox.com/v1/games?universeIds=%d", UniverseId), "GET", nil, "")
 	if Result != nil {
 		defer Result.Body.Close()
 	}
@@ -61,7 +61,7 @@ func GetPlaceThumbnail(UniverseId int) string {
 		return CachedThumbnailURL
 	}
 
-	Success, Result := rhttp.RobloxRequest(fmt.Sprintf("https://thumbnails.roblox.com/v1/games/icons?universeIds=%d&returnPolicy=PlaceHolder&size=512x512&format=Png&isCircular=false", UniverseId), "GET", nil, "", true)
+	Success, Result := rhttp.RobloxRequest(fmt.Sprintf("https://thumbnails.roblox.com/v1/games/icons?universeIds=%d&returnPolicy=PlaceHolder&size=512x512&format=Png&isCircular=false", UniverseId), "GET", nil, "")
 	if Result != nil {
 		defer Result.Body.Close()
 	}

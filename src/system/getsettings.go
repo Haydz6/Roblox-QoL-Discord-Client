@@ -9,7 +9,6 @@ import (
 type SettingsStruct struct {
 	StartonStartup bool
 	ShowConsole    bool
-	Cookie         string
 }
 
 var Settings SettingsStruct = SettingsStruct{StartonStartup: true, ShowConsole: false}

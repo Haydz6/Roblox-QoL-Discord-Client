@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Haydz6/Roblox-QoL-Discord-Client/src/presence"
-	"github.com/Haydz6/Roblox-QoL-Discord-Client/src/rhttp"
 	"github.com/Haydz6/Roblox-QoL-Discord-Client/src/system"
 	"github.com/Haydz6/rich-go/client"
 	"golang.org/x/net/websocket"
@@ -29,6 +27,11 @@ type MessageToBrowserStruct struct {
 	JobId      string                      `json:",omitempty"`
 	User       *client.AuthenticatedStruct `json:",omitempty"`
 }
+
+var LastTimestamp time.Time
+var LastPlaceId int
+var LastUniverseId int
+var LastJobId string
 
 type Server struct {
 	conns map[*websocket.Conn]bool
@@ -53,12 +56,10 @@ func (s *Server) handleWS(ws *websocket.Conn) {
 func (s *Server) cleanWS(ws *websocket.Conn) {
 	delete(s.conns, ws)
 
-	if !presence.SetDependentPresence(true) {
-		time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 5)
 
-		if len(s.conns) == 0 {
-			client.SetActivity(client.Activity{State: "end"})
-		}
+	if len(s.conns) == 0 {
+		client.SetActivity(nil)
 	}
 }
 
@@ -77,9 +78,8 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 		}
 	}()
 
-	presence.SetDependentPresence(false)
-	if presence.LastPlaceId != 0 {
-		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Timestamp", Timestamp: presence.LastTimestamp.UnixMilli(), PlaceId: presence.LastPlaceId, JobId: presence.LastJobId, UniverseId: presence.LastUniverseId})
+	if LastPlaceId != 0 {
+		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Timestamp", Timestamp: LastTimestamp.UnixMilli(), PlaceId: LastPlaceId, JobId: LastJobId, UniverseId: LastUniverseId})
 		if err == nil {
 			ws.Write(bytes)
 		}
@@ -112,18 +112,17 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 		}
 
 		if Body.Authentication != "" {
-			rhttp.SetCookie(Body.Authentication)
 			continue
 		}
 
 		var Error error
 		if Body.Activity != nil {
-			presence.LastJobId = Body.JobId
-			presence.LastPlaceId = Body.PlaceId
-			presence.LastTimestamp = *Body.Activity.Timestamps.Start
-			Error = client.SetActivity(*Body.Activity)
+			LastJobId = Body.JobId
+			LastPlaceId = Body.PlaceId
+			LastTimestamp = *Body.Activity.Timestamps.Start
+			Error = client.SetActivity(Body.Activity)
 		} else {
-			Error = client.SetActivity(client.Activity{State: "end"})
+			Error = client.SetActivity(nil)
 		}
 
 		if Error != nil {
@@ -149,13 +148,13 @@ func (s *Server) SendNewAuthentication() {
 
 func main() {
 	system.GetSettings()
+	system.SaveSettings() //update struct
 	system.ShowConsole(system.Settings.ShowConsole)
 	if system.Settings.StartonStartup {
 		go system.UpdateAutoStartState(true)
 	}
 	go system.CreateTray()
-	rhttp.Cookie = system.Settings.Cookie
-	presence.SetDependentPresence(true)
+
 	server := NewServer()
 
 	println("opening server")

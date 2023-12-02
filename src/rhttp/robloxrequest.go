@@ -2,7 +2,6 @@ package rhttp
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 )
 
@@ -13,11 +12,7 @@ type ResponseStruct struct {
 
 var CSRFToken string
 
-func RobloxRequest(URL string, Method string, Headers map[string]string, Body string, RequiresAuth bool) (bool, *http.Response) {
-	if GetCookie() == "" {
-		return false, nil
-	}
-
+func RobloxRequest(URL string, Method string, Headers map[string]string, Body string) (bool, *http.Response) {
 	client := &http.Client{}
 	request, _ := http.NewRequest(Method, URL, bytes.NewBuffer([]byte(Body)))
 
@@ -32,10 +27,6 @@ func RobloxRequest(URL string, Method string, Headers map[string]string, Body st
 	}
 	request.Header.Set("x-csrf-token", CSRFToken)
 
-	if RequiresAuth {
-		request.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s;", GetCookie()))
-	}
-
 	response, err := client.Do(request)
 
 	if err == nil {
@@ -43,10 +34,9 @@ func RobloxRequest(URL string, Method string, Headers map[string]string, Body st
 			CSRFToken = response.Header.Get("x-csrf-token")
 
 			if CSRFToken != "" {
-				return RobloxRequest(URL, Method, Headers, Body, RequiresAuth)
+				return RobloxRequest(URL, Method, Headers, Body)
 			}
 		} else if response.StatusCode == 401 {
-			SetCookie("") //Cookie is invalid
 			return false, nil
 		}
 	} else {
