@@ -22,7 +22,7 @@ func TrayReady() {
 	systray.SetTooltip("QoL Discord Client")
 
 	StartupButton := systray.AddMenuItemCheckbox("Launch on startup", "If the program should start when you first login", Settings.StartonStartup)
-	ConsoleButton := systray.AddMenuItemCheckbox("Show console", "Shows debugging console", Settings.ShowConsole)
+	//ConsoleButton := systray.AddMenuItemCheckbox("Show console", "Shows debugging console", Settings.ShowConsole)
 	QuitButton := systray.AddMenuItem("Quit", "Turns off the discord client")
 
 	for {
@@ -38,15 +38,15 @@ func TrayReady() {
 				StartupButton.Uncheck()
 			}
 			SaveSettings()
-		case <-ConsoleButton.ClickedCh:
-			Settings.ShowConsole = !Settings.ShowConsole
-			ShowConsole(Settings.ShowConsole)
-			if Settings.ShowConsole {
-				ConsoleButton.Check()
-			} else {
-				ConsoleButton.Uncheck()
-			}
-			SaveSettings()
+			// case <-ConsoleButton.ClickedCh:
+			// 	Settings.ShowConsole = !Settings.ShowConsole
+			// 	ShowConsole(Settings.ShowConsole)
+			// 	if Settings.ShowConsole {
+			// 		ConsoleButton.Check()
+			// 	} else {
+			// 		ConsoleButton.Uncheck()
+			// 	}
+			// 	SaveSettings()
 		}
 	}
 }

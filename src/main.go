@@ -85,7 +85,6 @@ func (s *Server) readLoop(ws *websocket.Conn) {
 		}
 	}
 
-	println("is authed", client.Authentication != nil)
 	if client.Authentication != nil {
 		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Authentication", User: client.Authentication})
 		if err == nil {
@@ -135,7 +134,6 @@ func (s *Server) SendNewAuthentication() {
 	for {
 		client.AuthenticationUpdate.Add(1)
 		client.AuthenticationUpdate.Wait()
-		println("auth update")
 
 		bytes, err := json.Marshal(MessageToBrowserStruct{Type: "Authentication", User: client.Authentication})
 		if err == nil {
@@ -149,15 +147,13 @@ func (s *Server) SendNewAuthentication() {
 func main() {
 	system.GetSettings()
 	system.SaveSettings() //update struct
-	system.ShowConsole(system.Settings.ShowConsole)
+	//system.ShowConsole(false) //(system.Settings.ShowConsole)
 	if system.Settings.StartonStartup {
 		go system.UpdateAutoStartState(true)
 	}
 	go system.CreateTray()
 
 	server := NewServer()
-
-	println("opening server")
 
 	http.HandleFunc("/presence", func(w http.ResponseWriter, req *http.Request) {
 		s := websocket.Server{Handler: websocket.Handler(server.handleWS)}
@@ -166,9 +162,7 @@ func main() {
 
 	go server.SendNewAuthentication()
 
-	println("client login")
 	client.Login("1105722413905346660")
-	println("client logged in")
 
 	for i := 0; i <= 4; i++ {
 		err := http.ListenAndServe(":"+strconv.Itoa(9300+i), nil)
